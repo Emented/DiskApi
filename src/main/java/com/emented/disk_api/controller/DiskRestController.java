@@ -37,7 +37,6 @@ public class DiskRestController {
     @Validated
     @GetMapping("/nodes/{id}")
     public SystemItem getSystemItem(@PathVariable @NotNull @NotBlank String id) {
-        systemItemService.getItemById(id);
         return systemItemService.getItemById(id);
     }
 }

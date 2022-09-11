@@ -7,7 +7,6 @@ import com.emented.disk_api.entity.SystemItemType;
 import com.emented.disk_api.exception.SystemItemValidationException;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +18,7 @@ public class SystemItemRequestValidator {
 
     public void validateSystemItemImportRequest(SystemItemImportRequest importRequest,
                                                 List<SystemItem> systemItemsFromDBList) {
+        checkForRepeatID(importRequest.getItems());
         Map<String, SystemItemImport> itemsToImport = importRequest
                 .getItems()
                 .stream()
@@ -31,8 +31,6 @@ public class SystemItemRequestValidator {
                 .stream()
                 .filter(element -> itemsToImport.containsKey(element.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        checkForRepeatID(itemsToImport);
         for (SystemItemImport systemItemImport : itemsToImport.values()) {
             validateSizeCorrectness(systemItemImport);
             validateUrlCorrectness(systemItemImport);
@@ -72,9 +70,9 @@ public class SystemItemRequestValidator {
         }
     }
 
-    private void checkForRepeatID(Map<String, SystemItemImport> itemsToImport) {
-        Set<String> itemsIds = new HashSet<>(itemsToImport.keySet());
-        if (itemsIds.size() != itemsToImport.size()) {
+    private void checkForRepeatID(List<SystemItemImport> itemImports) {
+        Set<String> itemsIds = itemImports.stream().map(SystemItemImport::getId).collect(Collectors.toSet());
+        if (itemsIds.size() != itemImports.size()) {
             throw new SystemItemValidationException("Duplicated ids in request");
         }
     }

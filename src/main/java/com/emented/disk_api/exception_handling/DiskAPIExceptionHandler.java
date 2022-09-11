@@ -37,7 +37,8 @@ public class DiskAPIExceptionHandler {
         Map<String, String> errors = bindingResult
                 .getFieldErrors()
                 .stream()
-                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+                .collect(Collectors.toMap(FieldError::getField,
+                        fieldError -> fieldError.getDefaultMessage() == null ? "Validation failed" : fieldError.getDefaultMessage()));
         Error error = new Error(HttpStatus.BAD_REQUEST.value(), errors.toString());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }

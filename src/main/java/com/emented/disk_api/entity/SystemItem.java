@@ -32,8 +32,8 @@ public class SystemItem {
     @Column(name = "size")
     private Integer size;
 
-    @OneToMany(mappedBy = "parentId")
-    private Set<SystemItem> children = new HashSet<>();
+    @OneToMany(mappedBy = "parentId", cascade = CascadeType.ALL)
+    private Set<SystemItem> children = null;
 
     public SystemItem() {
 
