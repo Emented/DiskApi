@@ -11,7 +11,8 @@ public enum ValidationErrorsEnum {
     FOLDER_URL_NOT_NULL("Folder URL must be null"),
     FILE_URL_NULL("File URL must not be null"),
     FILE_URL_TOO_LONG("File URL must be no longer, then 255"),
-    DEFAULT_MESSAGE("Validation failed");
+    DEFAULT_MESSAGE("Validation failed"),
+    ITEM_NOT_FOUND("Item with this ID not found");
 
     private final String message;
 

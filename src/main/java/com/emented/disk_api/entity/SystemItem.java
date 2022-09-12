@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 
-
-
 @Entity
 @Table(name = "system_items")
 public class SystemItem {

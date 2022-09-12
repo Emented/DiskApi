@@ -4,8 +4,8 @@ import com.emented.disk_api.communication.Response;
 import com.emented.disk_api.communication.SystemItemHistoryResponse;
 import com.emented.disk_api.communication.SystemItemImportRequest;
 import com.emented.disk_api.entity.SystemItem;
-import com.emented.disk_api.service.SystemItemService;
 import com.emented.disk_api.service.SystemItemConditionService;
+import com.emented.disk_api.service.SystemItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -39,7 +39,7 @@ public class DiskRestController {
 
     @DeleteMapping("/delete/{id}")
     public Response deleteSystemItem(@PathVariable @NotBlank String id,
-                                   @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") Instant date) {
+                                     @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") Instant date) {
         systemItemService.deleteItemById(id, date);
         return new Response(HttpStatus.OK.value(), "Deletion was completed successfully.");
     }
@@ -57,9 +57,9 @@ public class DiskRestController {
     @GetMapping("/node/{id}/history")
     public SystemItemHistoryResponse getHistoryForSystemItem(@PathVariable @NotBlank String id,
                                                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-                                                                 Instant dateStart,
+                                                             Instant dateStart,
                                                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-                                                                 Instant dateEnd) {
+                                                             Instant dateEnd) {
         return systemItemConditionService.getHistoryForSystemItem(id, dateStart, dateEnd);
     }
 }

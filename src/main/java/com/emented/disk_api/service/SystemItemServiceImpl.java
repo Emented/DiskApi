@@ -3,13 +3,14 @@ package com.emented.disk_api.service;
 import com.emented.disk_api.communication.SystemItemHistoryResponse;
 import com.emented.disk_api.communication.SystemItemHistoryUnit;
 import com.emented.disk_api.communication.SystemItemImport;
-import com.emented.disk_api.dao.SystemItemRepository;
 import com.emented.disk_api.communication.SystemItemImportRequest;
+import com.emented.disk_api.dao.SystemItemRepository;
 import com.emented.disk_api.entity.SystemItem;
 import com.emented.disk_api.entity.SystemItemType;
 import com.emented.disk_api.exception.SystemItemNotFoundException;
 import com.emented.disk_api.util.SystemItemConverter;
 import com.emented.disk_api.validation.SystemItemRequestValidator;
+import com.emented.disk_api.validation.ValidationErrorsEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,13 +29,17 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     private final SystemItemConverter systemItemConverter;
 
+    private final SystemItemConditionService systemItemConditionService;
+
     @Autowired
     public SystemItemServiceImpl(SystemItemRepository systemItemRepository,
                                  SystemItemRequestValidator systemItemRequestValidator,
-                                 SystemItemConverter systemItemConverter) {
+                                 SystemItemConverter systemItemConverter,
+                                 SystemItemConditionService systemItemConditionService) {
         this.systemItemRepository = systemItemRepository;
         this.systemItemRequestValidator = systemItemRequestValidator;
         this.systemItemConverter = systemItemConverter;
+        this.systemItemConditionService = systemItemConditionService;
     }
 
     @Override
@@ -57,7 +62,6 @@ public class SystemItemServiceImpl implements SystemItemService {
     }
 
 
-
     @Override
     public void deleteItemById(String id, Instant date) {
         Optional<SystemItem> optionalItemToDelete = systemItemRepository.findById(id);
@@ -66,7 +70,7 @@ public class SystemItemServiceImpl implements SystemItemService {
             updateBranch(itemToDelete, -itemToDelete.getSize(), date);
             systemItemRepository.delete(itemToDelete);
         } else {
-            throw new SystemItemNotFoundException("Item with this ID not found");
+            throw new SystemItemNotFoundException(ValidationErrorsEnum.ITEM_NOT_FOUND.getMessage());
         }
     }
 
@@ -76,7 +80,7 @@ public class SystemItemServiceImpl implements SystemItemService {
         if (systemItem.isPresent()) {
             return systemItem.get();
         } else {
-            throw new SystemItemNotFoundException("Item with this ID not found");
+            throw new SystemItemNotFoundException(ValidationErrorsEnum.ITEM_NOT_FOUND.getMessage());
         }
     }
 
@@ -84,7 +88,7 @@ public class SystemItemServiceImpl implements SystemItemService {
     public SystemItemHistoryResponse getItemsUpdatedInLast24Hours(Instant date) {
         List<SystemItemHistoryUnit> historyUnits = systemItemRepository
                 .findAllByDateIsBetween(date.minus(24, ChronoUnit.HOURS),
-                date).stream().map(systemItemConverter::convertSystemItemToHistoryUnit).toList();
+                        date).stream().map(systemItemConverter::convertSystemItemToHistoryUnit).toList();
         return new SystemItemHistoryResponse(historyUnits);
     }
 

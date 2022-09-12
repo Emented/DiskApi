@@ -36,7 +36,7 @@ public class SystemItemConverter {
         return systemItemHistoryUnit;
     }
 
-    public SystemItemHistoryUnit convertSystemUnitConditionToHistoryUnit(SystemItemCondition systemItemCondition) {
+    public SystemItemHistoryUnit convertSystemItemConditionToHistoryUnit(SystemItemCondition systemItemCondition) {
         SystemItemHistoryUnit systemItemHistoryUnit = new SystemItemHistoryUnit();
         systemItemHistoryUnit.setId(systemItemCondition.getSystemItem().getId());
         systemItemHistoryUnit.setType(systemItemCondition.getSystemItem().getType());
