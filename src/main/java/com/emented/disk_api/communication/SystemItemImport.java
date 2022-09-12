@@ -4,7 +4,6 @@ import com.emented.disk_api.entity.SystemItemType;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class SystemItemImport {
@@ -20,9 +19,9 @@ public class SystemItemImport {
     @Enumerated(EnumType.STRING)
     private SystemItemType type;
 
-    private Integer size;
+    private Long size;
 
-    public SystemItemImport(String id, String url, String parentId, SystemItemType type, Integer size) {
+    public SystemItemImport(String id, String url, String parentId, SystemItemType type, Long size) {
         this.id = id;
         this.url = url;
         this.parentId = parentId;
@@ -62,11 +61,11 @@ public class SystemItemImport {
         this.type = type;
     }
 
-    public Integer getSize() {
+    public Long getSize() {
         return size;
     }
 
-    public void setSize(Integer size) {
+    public void setSize(Long size) {
         this.size = size;
     }
 

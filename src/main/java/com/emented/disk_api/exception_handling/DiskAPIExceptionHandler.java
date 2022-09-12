@@ -21,13 +21,13 @@ public class DiskAPIExceptionHandler {
 
     @ExceptionHandler(value = {SystemItemValidationException.class})
     public ResponseEntity<Error> handleValidationException(SystemItemValidationException apiException) {
-        Error error = new Error(HttpStatus.BAD_REQUEST.value(), apiException.getMessage());
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), apiException.getErrors().toString());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value = {HttpMessageNotReadableException.class})
     public ResponseEntity<Error> handleJsonParseException() {
-        Error error = new Error(HttpStatus.BAD_REQUEST.value(), "Enable to parse JSON");
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), "Validation failed");
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 

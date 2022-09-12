@@ -1,6 +1,7 @@
 package com.emented.disk_api.communication;
 
-import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -17,6 +18,7 @@ public class SystemItemImportRequest {
     private List<SystemItemImport> items;
 
     @NotNull(message = "Date must not be null")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private Instant updateDate;
 
     public SystemItemImportRequest(List<SystemItemImport> items, Instant updateDate) {

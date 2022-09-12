@@ -1,11 +1,10 @@
 package com.emented.disk_api.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Set;
+
+
 
 
 @Entity
@@ -30,7 +29,7 @@ public class SystemItem {
     private SystemItemType type;
 
     @Column(name = "size")
-    private Integer size;
+    private Long size;
 
     @OneToMany(mappedBy = "parentId", cascade = CascadeType.ALL)
     private Set<SystemItem> children = null;
@@ -39,7 +38,7 @@ public class SystemItem {
 
     }
 
-    public SystemItem(String id, String url, Instant date, String parentId, SystemItemType type, Integer size) {
+    public SystemItem(String id, String url, Instant date, String parentId, SystemItemType type, Long size) {
         this.id = id;
         this.url = url;
         this.date = date;
@@ -88,15 +87,16 @@ public class SystemItem {
         this.type = type;
     }
 
-    public Integer getSize() {
+    public Long getSize() {
         return size;
     }
 
-    public void setSize(Integer size) {
+    public void setSize(Long size) {
         this.size = size;
     }
 
     public Set<SystemItem> getChildren() {
+        if (children.isEmpty()) return null;
         return children;
     }
 
