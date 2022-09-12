@@ -4,11 +4,13 @@ import com.emented.disk_api.entity.SystemItemType;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 public class SystemItemImport {
 
     @NotNull(message = "ID must not be null")
+    @NotBlank
     private String id;
 
     private String url;

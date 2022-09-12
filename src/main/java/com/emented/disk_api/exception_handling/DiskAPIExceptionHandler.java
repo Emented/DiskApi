@@ -3,6 +3,7 @@ package com.emented.disk_api.exception_handling;
 import com.emented.disk_api.communication.Error;
 import com.emented.disk_api.exception.SystemItemNotFoundException;
 import com.emented.disk_api.exception.SystemItemValidationException;
+import com.emented.disk_api.validation.ValidationErrorsEnum;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.validation.ConstraintViolationException;
 import java.util.Map;
@@ -21,13 +23,13 @@ public class DiskAPIExceptionHandler {
 
     @ExceptionHandler(value = {SystemItemValidationException.class})
     public ResponseEntity<Error> handleValidationException(SystemItemValidationException apiException) {
-        Error error = new Error(HttpStatus.BAD_REQUEST.value(), apiException.getErrors().toString());
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), apiException.toString());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = {HttpMessageNotReadableException.class})
+    @ExceptionHandler(value = {HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Error> handleJsonParseException() {
-        Error error = new Error(HttpStatus.BAD_REQUEST.value(), "Validation failed");
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), ValidationErrorsEnum.DEFAULT_MESSAGE.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
@@ -38,7 +40,9 @@ public class DiskAPIExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(FieldError::getField,
-                        fieldError -> fieldError.getDefaultMessage() == null ? "Validation failed" : fieldError.getDefaultMessage()));
+                        fieldError -> fieldError.getDefaultMessage() == null ?
+                                ValidationErrorsEnum.DEFAULT_MESSAGE.getMessage() :
+                                fieldError.getDefaultMessage()));
         Error error = new Error(HttpStatus.BAD_REQUEST.value(), errors.toString());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
