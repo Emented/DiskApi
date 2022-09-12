@@ -7,17 +7,14 @@ import com.emented.disk_api.entity.SystemItemType;
 import com.emented.disk_api.exception.SystemItemValidationException;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 public class SystemItemRequestValidator {
 
-    private final Map<Integer, ValidationErrorsEnum> errors = new HashMap<>();
+    private final Map<Integer, List<ValidationErrorsEnum>> errors = new HashMap<>();
 
     public void validateSystemItemImportRequest(SystemItemImportRequest importRequest,
                                                 Map<String, SystemItem> elementsToUpdateFromDB,
@@ -49,17 +46,17 @@ public class SystemItemRequestValidator {
                                                        int number) {
         if (parentsFromDB.containsKey(systemItemImport.getParentId())) {
             if (parentsFromDB.get(systemItemImport.getParentId()).getType() != SystemItemType.FOLDER) {
-                errors.put(number, ValidationErrorsEnum.PARENT_NOT_FOLDER);
+                addNewError(number, ValidationErrorsEnum.PARENT_NOT_FOLDER);
             }
             return;
         }
         if (itemsToImport.containsKey(systemItemImport.getParentId())) {
             if (itemsToImport.get(systemItemImport.getParentId()).getType() != SystemItemType.FOLDER) {
-                errors.put(number, ValidationErrorsEnum.PARENT_NOT_FOLDER);
+                addNewError(number, ValidationErrorsEnum.PARENT_NOT_FOLDER);
             }
             return;
         }
-        errors.put(number, ValidationErrorsEnum.PARENT_NOT_FOUND);
+        addNewError(number, ValidationErrorsEnum.PARENT_NOT_FOUND);
     }
 
     private void validateTypeSubstitution(SystemItemImport systemItemImport,
@@ -69,14 +66,14 @@ public class SystemItemRequestValidator {
             return;
         }
         if (systemItemImport.getType() != systemItemsToUpdate.get(systemItemImport.getId()).getType()) {
-            errors.put(number, ValidationErrorsEnum.TYPE_CHANGE_ATTEMPT);
+            addNewError(number, ValidationErrorsEnum.TYPE_CHANGE_ATTEMPT);
         }
     }
 
     private void checkForRepeatID(List<SystemItemImport> itemImports) {
         Set<String> itemsIds = itemImports.stream().map(SystemItemImport::getId).collect(Collectors.toSet());
         if (itemsIds.size() != itemImports.size()) {
-            throw new SystemItemValidationException(Map.of(-1, ValidationErrorsEnum.DUPLICATED_IDS));
+            throw new SystemItemValidationException(Map.of(-1, List.of(ValidationErrorsEnum.DUPLICATED_IDS)));
         }
     }
 
@@ -84,15 +81,15 @@ public class SystemItemRequestValidator {
                                          int number) {
         if (systemItemImport.getType() == SystemItemType.FOLDER) {
             if (systemItemImport.getSize() != null) {
-                errors.put(number, ValidationErrorsEnum.FOLDER_SIZE_NOT_NULL);
+                addNewError(number, ValidationErrorsEnum.FOLDER_SIZE_NOT_NULL);
             }
         } else {
             if (systemItemImport.getSize() == null) {
-                errors.put(number, ValidationErrorsEnum.FILE_SIZE_NULL);
+                addNewError(number, ValidationErrorsEnum.FILE_SIZE_NULL);
                 return;
             }
             if (systemItemImport.getSize() <= 0) {
-                errors.put(number, ValidationErrorsEnum.FILE_SIZE_LESS_THEN_ZERO);
+                addNewError(number, ValidationErrorsEnum.FILE_SIZE_LESS_THEN_ZERO);
             }
         }
     }
@@ -101,16 +98,22 @@ public class SystemItemRequestValidator {
                                         int number) {
         if (systemItemImport.getType() == SystemItemType.FOLDER) {
             if (systemItemImport.getUrl() != null) {
-                errors.put(number, ValidationErrorsEnum.FOLDER_URL_NOT_NULL);
+                addNewError(number, ValidationErrorsEnum.FOLDER_URL_NOT_NULL);
             }
         } else {
             if (systemItemImport.getUrl() == null) {
-                errors.put(number, ValidationErrorsEnum.FILE_URL_NULL);
+                addNewError(number, ValidationErrorsEnum.FILE_URL_NULL);
                 return;
             }
             if (systemItemImport.getUrl().length() > 255) {
-                errors.put(number, ValidationErrorsEnum.FILE_URL_TOO_LONG);
+                addNewError(number, ValidationErrorsEnum.FILE_URL_TOO_LONG);
             }
         }
+    }
+
+    private void addNewError(Integer number, ValidationErrorsEnum validationErrorsEnum) {
+        List<ValidationErrorsEnum> errorsEnumList = errors.getOrDefault(number, new ArrayList<>());
+        errorsEnumList.add(validationErrorsEnum);
+        errors.put(number, errorsEnumList);
     }
 }
