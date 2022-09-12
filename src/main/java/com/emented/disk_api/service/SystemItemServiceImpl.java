@@ -1,32 +1,40 @@
 package com.emented.disk_api.service;
 
+import com.emented.disk_api.communication.SystemItemHistoryResponse;
+import com.emented.disk_api.communication.SystemItemHistoryUnit;
 import com.emented.disk_api.communication.SystemItemImport;
 import com.emented.disk_api.dao.SystemItemRepository;
 import com.emented.disk_api.communication.SystemItemImportRequest;
 import com.emented.disk_api.entity.SystemItem;
 import com.emented.disk_api.entity.SystemItemType;
 import com.emented.disk_api.exception.SystemItemNotFoundException;
+import com.emented.disk_api.util.SystemItemConverter;
 import com.emented.disk_api.validation.SystemItemRequestValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Repository
+@Service
 public class SystemItemServiceImpl implements SystemItemService {
 
     private final SystemItemRepository systemItemRepository;
 
     private final SystemItemRequestValidator systemItemRequestValidator;
 
+    private final SystemItemConverter systemItemConverter;
+
     @Autowired
     public SystemItemServiceImpl(SystemItemRepository systemItemRepository,
-                                 SystemItemRequestValidator systemItemRequestValidator) {
+                                 SystemItemRequestValidator systemItemRequestValidator,
+                                 SystemItemConverter systemItemConverter) {
         this.systemItemRepository = systemItemRepository;
         this.systemItemRequestValidator = systemItemRequestValidator;
+        this.systemItemConverter = systemItemConverter;
     }
 
     @Override
@@ -70,6 +78,14 @@ public class SystemItemServiceImpl implements SystemItemService {
         } else {
             throw new SystemItemNotFoundException("Item with this ID not found");
         }
+    }
+
+    @Override
+    public SystemItemHistoryResponse getItemsUpdatedInLast24Hours(Instant date) {
+        List<SystemItemHistoryUnit> historyUnits = systemItemRepository
+                .findAllByDateIsBetween(date.minus(24, ChronoUnit.HOURS),
+                date).stream().map(systemItemConverter::convertSystemItemToHistoryUnit).toList();
+        return new SystemItemHistoryResponse(historyUnits);
     }
 
     private void updateBranch(SystemItem item, Long sizeDifference, Instant date) {
@@ -178,20 +194,9 @@ public class SystemItemServiceImpl implements SystemItemService {
         List<SystemItem> systemItemListFromDB = systemItemImportRequest
                 .getItems()
                 .stream()
-                .map(systemItemImport -> convertSystemItemImportToSystemItem(systemItemImport,
+                .map(systemItemImport -> systemItemConverter.convertSystemItemImportToSystemItem(systemItemImport,
                         systemItemImportRequest.getUpdateDate()))
                 .toList();
         return systemItemListFromDB.stream().collect(Collectors.toMap(SystemItem::getId, Function.identity()));
-    }
-
-    private SystemItem convertSystemItemImportToSystemItem(SystemItemImport systemItemImport, Instant updateDate) {
-        SystemItem systemItem = new SystemItem();
-        systemItem.setId(systemItemImport.getId());
-        systemItem.setUrl(systemItemImport.getUrl());
-        systemItem.setParentId(systemItemImport.getParentId());
-        systemItem.setType(systemItemImport.getType());
-        systemItem.setSize(systemItemImport.getSize());
-        systemItem.setDate(updateDate);
-        return systemItem;
     }
 }

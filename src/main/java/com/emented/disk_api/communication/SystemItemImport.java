@@ -23,6 +23,9 @@ public class SystemItemImport {
 
     private Long size;
 
+    public SystemItemImport() {
+    }
+
     public SystemItemImport(String id, String url, String parentId, SystemItemType type, Long size) {
         this.id = id;
         this.url = url;

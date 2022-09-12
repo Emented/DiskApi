@@ -2,6 +2,7 @@ package com.emented.disk_api.entity;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 
@@ -33,6 +34,9 @@ public class SystemItem {
 
     @OneToMany(mappedBy = "parentId", cascade = CascadeType.ALL)
     private Set<SystemItem> children = null;
+
+    @OneToMany(mappedBy = "systemItem", cascade = CascadeType.ALL)
+    private List<SystemItemCondition> conditions;
 
     public SystemItem() {
 
@@ -102,6 +106,14 @@ public class SystemItem {
 
     public void setChildren(Set<SystemItem> children) {
         this.children = children;
+    }
+
+    public List<SystemItemCondition> getConditions() {
+        return conditions;
+    }
+
+    public void setConditions(List<SystemItemCondition> conditions) {
+        this.conditions = conditions;
     }
 
     @Override
