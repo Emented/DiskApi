@@ -42,11 +42,16 @@ public class SystemItemServiceImpl implements SystemItemService {
         this.systemItemConditionService = systemItemConditionService;
     }
 
+    /**
+     * The method responsible for updating and adding new SystemItems
+     * @param systemItemImportRequest Request
+     */
     @Override
     public void importItem(SystemItemImportRequest systemItemImportRequest) {
         Map<String, SystemItem> elementsToUpdateFromDB = getElementsToUpdateFromDB(systemItemImportRequest);
         Map<String, SystemItem> parentElementsFromDB = getParentElementsFromDB(systemItemImportRequest);
         Map<String, SystemItem> systemItemsFromRequest = getSystemItemsFromImportRequest(systemItemImportRequest);
+        // validating request
         systemItemRequestValidator.validateSystemItemImportRequest(systemItemImportRequest,
                 elementsToUpdateFromDB,
                 parentElementsFromDB);
@@ -56,20 +61,32 @@ public class SystemItemServiceImpl implements SystemItemService {
             }
         });
         Map<String, SystemItem> updatedItems = new HashMap<>();
+        // inserting new folders
         updatedItems.putAll(insertNewFolders(systemItemsFromRequest, elementsToUpdateFromDB));
+        // updating already existing elements
         updatedItems.putAll(updateElements(elementsToUpdateFromDB, systemItemsFromRequest,
                 systemItemImportRequest.getUpdateDate()));
+        // inserting new files
         updatedItems.putAll(insertNewFiles(systemItemsFromRequest, elementsToUpdateFromDB));
+        // storing item's conditions
         updatedItems.values().forEach(systemItemConditionService::saveCondition);
     }
 
 
+    /**
+     * The method responsible for deleting SystemItems
+     * @param id Id of element
+     * @param date Date of deletion
+     */
     @Override
     public void deleteItemById(String id, Instant date) {
         Optional<SystemItem> optionalItemToDelete = systemItemRepository.findById(id);
         if (optionalItemToDelete.isPresent()) {
+            // getting item from DB
             SystemItem itemToDelete = optionalItemToDelete.get();
+            // updating branch
             Map<String, SystemItem> updatedElements = updateBranch(itemToDelete, -itemToDelete.getSize(), date);
+            // storing item's conditions
             updatedElements.values().forEach(systemItemConditionService::saveCondition);
             systemItemRepository.delete(itemToDelete);
         } else {
@@ -77,6 +94,11 @@ public class SystemItemServiceImpl implements SystemItemService {
         }
     }
 
+    /**
+     * The method responsible for getting SystemItem from DB
+     * @param id Id of element
+     * @return SystemItem
+     */
     @Override
     public SystemItem getItemById(String id) {
         Optional<SystemItem> systemItem = systemItemRepository.findById(id);
@@ -87,6 +109,11 @@ public class SystemItemServiceImpl implements SystemItemService {
         }
     }
 
+    /**
+     * The method responsible for getting updates in last 24 hours
+     * @param date Current date
+     * @return Response with updates
+     */
     @Override
     public SystemItemHistoryResponse getItemsUpdatedInLast24Hours(Instant date) {
         List<SystemItemHistoryUnit> historyUnits = systemItemRepository
@@ -95,6 +122,13 @@ public class SystemItemServiceImpl implements SystemItemService {
         return new SystemItemHistoryResponse(historyUnits);
     }
 
+    /**
+     * The method responsible for recursively updating branches
+     * @param item The start of recursion
+     * @param sizeDifference Difference in size
+     * @param date Date of update
+     * @return Changed items
+     */
     private Map<String, SystemItem> updateBranch(SystemItem item, Long sizeDifference, Instant date) {
         String parentId = item.getParentId();
         Map<String, SystemItem> updatedItems = new HashMap<>();
@@ -118,6 +152,13 @@ public class SystemItemServiceImpl implements SystemItemService {
         return updatedItems;
     }
 
+    /**
+     * The method responsible for updating already existing items
+     * @param elementsToUpdateFromDB Elements to update
+     * @param systemItemsFromRequest Elements from request
+     * @param date Date of updating
+     * @return Updated items
+     */
     private Map<String, SystemItem> updateElements(Map<String, SystemItem> elementsToUpdateFromDB,
                                 Map<String, SystemItem> systemItemsFromRequest,
                                 Instant date) {
@@ -125,12 +166,14 @@ public class SystemItemServiceImpl implements SystemItemService {
         for (Map.Entry<String, SystemItem> updateEntryFromDB : elementsToUpdateFromDB.entrySet()) {
             SystemItem itemBeforeUpdate = updateEntryFromDB.getValue();
             SystemItem itemAfterUpdate = systemItemsFromRequest.get(itemBeforeUpdate.getId());
+            // checking that the element has been updated
             if (!itemBeforeUpdate.equals(itemAfterUpdate)) {
-                System.out.println("hui");
                 updatedItems.put(itemAfterUpdate.getId(), itemAfterUpdate);
+                // update the size if the item is a file
                 if (itemAfterUpdate.getType() == SystemItemType.FOLDER) {
                     itemAfterUpdate.setSize(itemBeforeUpdate.getSize());
                 }
+                // checking whether the parent has changed, and if it has changed, then we bypass two branches
                 if (!Objects.equals(itemAfterUpdate.getParentId(), itemBeforeUpdate.getParentId())) {
                     if (itemBeforeUpdate.getParentId() != null) {
                         updatedItems.putAll(updateBranch(itemBeforeUpdate,
@@ -153,6 +196,12 @@ public class SystemItemServiceImpl implements SystemItemService {
         return updatedItems;
     }
 
+    /**
+     * The method responsible for inserting new files
+     * @param systemItemsFromRequest Elements from request
+     * @param elementsToUpdateFromDB Elements to update
+     * @return Updated items
+     */
     private Map<String, SystemItem> insertNewFiles(Map<String, SystemItem> systemItemsFromRequest,
                                 Map<String, SystemItem> elementsToUpdateFromDB) {
         Map<String, SystemItem> newFiles = systemItemsFromRequest
@@ -170,6 +219,12 @@ public class SystemItemServiceImpl implements SystemItemService {
         return updatedItems;
     }
 
+    /**
+     * The method responsible for inserting new folders
+     * @param systemItemsFromRequest Elements from request
+     * @param elementsToUpdateFromDB Elements to update
+     * @return Updated items
+     */
     private Map<String, SystemItem> insertNewFolders(Map<String, SystemItem> systemItemsFromRequest,
                                   Map<String, SystemItem> elementsToUpdateFromDB) {
         Map<String, SystemItem> newFolders = systemItemsFromRequest

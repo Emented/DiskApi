@@ -33,6 +33,13 @@ public class SystemItemConditionServiceImpl implements SystemItemConditionServic
         this.systemItemRepository = systemItemRepository;
     }
 
+    /**
+     * The method responsible for getting history of item changes during some period of time
+     * @param id Item's id
+     * @param dateStart Start point
+     * @param dateEnd End point
+     * @return SystemItemHistoryResponse
+     */
     @Override
     public SystemItemHistoryResponse getHistoryForSystemItem(String id,
                                                              Instant dateStart,
@@ -48,10 +55,12 @@ public class SystemItemConditionServiceImpl implements SystemItemConditionServic
         return new SystemItemHistoryResponse(systemItemConditions);
     }
 
+    /**
+     * Method responsible for saving the condition of item
+     * @param systemItem Item
+     */
     @Override
     public void saveCondition(SystemItem systemItem) {
         systemItemConditionRepository.save(systemItemConverter.convertSystemItemToCondition(systemItem));
     }
-
-
 }
