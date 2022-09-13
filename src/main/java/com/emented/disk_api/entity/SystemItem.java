@@ -123,7 +123,12 @@ public class SystemItem {
         if (this == o) return true;
         if (!(o instanceof SystemItem)) return false;
         SystemItem that = (SystemItem) o;
-        return id.equals(that.id) && Objects.equals(url, that.url) && date.equals(that.date) && Objects.equals(parentId, that.parentId) && type == that.type && Objects.equals(size, that.size);
+        return id.equals(that.id) &&
+                Objects.equals(url, that.url) &&
+                date.equals(that.date) &&
+                Objects.equals(parentId, that.parentId) &&
+                type == that.type &&
+                (type == SystemItemType.FOLDER || Objects.equals(size, that.size));
     }
 
     @Override

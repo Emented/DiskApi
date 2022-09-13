@@ -126,6 +126,7 @@ public class SystemItemServiceImpl implements SystemItemService {
             SystemItem itemBeforeUpdate = updateEntryFromDB.getValue();
             SystemItem itemAfterUpdate = systemItemsFromRequest.get(itemBeforeUpdate.getId());
             if (!itemBeforeUpdate.equals(itemAfterUpdate)) {
+                System.out.println("hui");
                 updatedItems.put(itemAfterUpdate.getId(), itemAfterUpdate);
                 if (itemAfterUpdate.getType() == SystemItemType.FOLDER) {
                     itemAfterUpdate.setSize(itemBeforeUpdate.getSize());
