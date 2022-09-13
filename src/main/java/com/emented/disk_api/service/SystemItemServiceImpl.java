@@ -55,10 +55,12 @@ public class SystemItemServiceImpl implements SystemItemService {
                 systemItem.setSize(0L);
             }
         });
-        insertNewFolders(systemItemsFromRequest, elementsToUpdateFromDB);
-        updateElements(elementsToUpdateFromDB, systemItemsFromRequest,
-                systemItemImportRequest.getUpdateDate());
-        insertNewFiles(systemItemsFromRequest, elementsToUpdateFromDB);
+        Map<String, SystemItem> updatedItems = new HashMap<>();
+        updatedItems.putAll(insertNewFolders(systemItemsFromRequest, elementsToUpdateFromDB));
+        updatedItems.putAll(updateElements(elementsToUpdateFromDB, systemItemsFromRequest,
+                systemItemImportRequest.getUpdateDate()));
+        updatedItems.putAll(insertNewFiles(systemItemsFromRequest, elementsToUpdateFromDB));
+        updatedItems.values().forEach(systemItemConditionService::saveCondition);
     }
 
 
@@ -67,7 +69,8 @@ public class SystemItemServiceImpl implements SystemItemService {
         Optional<SystemItem> optionalItemToDelete = systemItemRepository.findById(id);
         if (optionalItemToDelete.isPresent()) {
             SystemItem itemToDelete = optionalItemToDelete.get();
-            updateBranch(itemToDelete, -itemToDelete.getSize(), date);
+            Map<String, SystemItem> updatedElements = updateBranch(itemToDelete, -itemToDelete.getSize(), date);
+            updatedElements.values().forEach(systemItemConditionService::saveCondition);
             systemItemRepository.delete(itemToDelete);
         } else {
             throw new SystemItemNotFoundException(ValidationErrorsEnum.ITEM_NOT_FOUND.getMessage());
@@ -92,47 +95,64 @@ public class SystemItemServiceImpl implements SystemItemService {
         return new SystemItemHistoryResponse(historyUnits);
     }
 
-    private void updateBranch(SystemItem item, Long sizeDifference, Instant date) {
+    private Map<String, SystemItem> updateBranch(SystemItem item, Long sizeDifference, Instant date) {
         String parentId = item.getParentId();
+        Map<String, SystemItem> updatedItems = new HashMap<>();
         while (parentId != null) {
             SystemItem parent = systemItemRepository.getReferenceById(parentId);
-            parent.setDate(date);
-            parent.setSize(parent.getSize() + sizeDifference);
+            boolean isUpdated = false;
+            if (parent.getDate() != date) {
+                parent.setDate(date);
+                isUpdated = true;
+            }
+            if (sizeDifference != 0) {
+                parent.setSize(parent.getSize() + sizeDifference);
+                isUpdated = true;
+            }
+            if (isUpdated) {
+                updatedItems.put(parent.getId(), parent);
+                systemItemRepository.save(parent);
+            }
             parentId = parent.getParentId();
-            systemItemRepository.save(parent);
         }
+        return updatedItems;
     }
 
-    private void updateElements(Map<String, SystemItem> elementsToUpdateFromDB,
+    private Map<String, SystemItem> updateElements(Map<String, SystemItem> elementsToUpdateFromDB,
                                 Map<String, SystemItem> systemItemsFromRequest,
                                 Instant date) {
+        Map<String, SystemItem> updatedItems = new HashMap<>();
         for (Map.Entry<String, SystemItem> updateEntryFromDB : elementsToUpdateFromDB.entrySet()) {
             SystemItem itemBeforeUpdate = updateEntryFromDB.getValue();
             SystemItem itemAfterUpdate = systemItemsFromRequest.get(itemBeforeUpdate.getId());
-            if (itemAfterUpdate.getType() == SystemItemType.FOLDER) {
-                itemAfterUpdate.setSize(itemBeforeUpdate.getSize());
-            }
-            if (!Objects.equals(itemAfterUpdate.getParentId(), itemBeforeUpdate.getParentId())) {
-                if (itemBeforeUpdate.getParentId() != null) {
-                    updateBranch(itemBeforeUpdate,
-                            -itemBeforeUpdate.getSize(),
-                            date);
+            if (!itemBeforeUpdate.equals(itemAfterUpdate)) {
+                updatedItems.put(itemAfterUpdate.getId(), itemAfterUpdate);
+                if (itemAfterUpdate.getType() == SystemItemType.FOLDER) {
+                    itemAfterUpdate.setSize(itemBeforeUpdate.getSize());
                 }
-                if (itemAfterUpdate.getParentId() != null) {
-                    updateBranch(itemAfterUpdate,
-                            itemAfterUpdate.getSize(),
-                            date);
+                if (!Objects.equals(itemAfterUpdate.getParentId(), itemBeforeUpdate.getParentId())) {
+                    if (itemBeforeUpdate.getParentId() != null) {
+                        updatedItems.putAll(updateBranch(itemBeforeUpdate,
+                                -itemBeforeUpdate.getSize(),
+                                date));
+                    }
+                    if (itemAfterUpdate.getParentId() != null) {
+                        updatedItems.putAll(updateBranch(itemAfterUpdate,
+                                itemAfterUpdate.getSize(),
+                                date));
+                    }
+                } else {
+                    updatedItems.putAll(updateBranch(itemAfterUpdate,
+                            itemAfterUpdate.getSize() - itemBeforeUpdate.getSize(),
+                            date));
                 }
-            } else {
-                updateBranch(itemAfterUpdate,
-                        itemAfterUpdate.getSize() - itemBeforeUpdate.getSize(),
-                        date);
+                systemItemRepository.save(itemAfterUpdate);
             }
-            systemItemRepository.save(itemAfterUpdate);
         }
+        return updatedItems;
     }
 
-    private void insertNewFiles(Map<String, SystemItem> systemItemsFromRequest,
+    private Map<String, SystemItem> insertNewFiles(Map<String, SystemItem> systemItemsFromRequest,
                                 Map<String, SystemItem> elementsToUpdateFromDB) {
         Map<String, SystemItem> newFiles = systemItemsFromRequest
                 .entrySet()
@@ -140,14 +160,16 @@ public class SystemItemServiceImpl implements SystemItemService {
                 .filter(entry -> entry.getValue().getType() == SystemItemType.FILE &&
                         !elementsToUpdateFromDB.containsKey(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, SystemItem> updatedItems = new HashMap<>(newFiles);
         for (Map.Entry<String, SystemItem> fileEntry : newFiles.entrySet()) {
             SystemItem file = fileEntry.getValue();
-            updateBranch(file, file.getSize(), file.getDate());
+            updatedItems.putAll(updateBranch(file, file.getSize(), file.getDate()));
             systemItemRepository.save(file);
         }
+        return updatedItems;
     }
 
-    private void insertNewFolders(Map<String, SystemItem> systemItemsFromRequest,
+    private Map<String, SystemItem> insertNewFolders(Map<String, SystemItem> systemItemsFromRequest,
                                   Map<String, SystemItem> elementsToUpdateFromDB) {
         Map<String, SystemItem> newFolders = systemItemsFromRequest
                 .entrySet()
@@ -156,6 +178,7 @@ public class SystemItemServiceImpl implements SystemItemService {
                         !elementsToUpdateFromDB.containsKey(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         systemItemRepository.saveAll(newFolders.values());
+        Map<String, SystemItem> updatedItems = new HashMap<>(newFolders);
         Set<String> updatedIDs = new HashSet<>();
         for (Map.Entry<String, SystemItem> folderEntry : newFolders.entrySet()) {
             SystemItem folder = folderEntry.getValue();
@@ -165,12 +188,16 @@ public class SystemItemServiceImpl implements SystemItemService {
                     break;
                 }
                 SystemItem parent = systemItemRepository.getReferenceById(parentId);
-                parent.setDate(folder.getDate());
-                updatedIDs.add(folder.getId());
-                systemItemRepository.save(parent);
+                if (parent.getDate() != folder.getDate()) {
+                    parent.setDate(folder.getDate());
+                    updatedIDs.add(folder.getId());
+                    updatedItems.put(parent.getId(), parent);
+                    systemItemRepository.save(parent);
+                }
                 parentId = parent.getParentId();
             }
         }
+        return updatedItems;
     }
 
     private Map<String, SystemItem> getElementsToUpdateFromDB(SystemItemImportRequest systemItemImportRequest) {

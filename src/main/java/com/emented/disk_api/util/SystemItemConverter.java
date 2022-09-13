@@ -50,7 +50,7 @@ public class SystemItemConverter {
 
     public SystemItemCondition convertSystemItemToCondition(SystemItem systemItem) {
         SystemItemCondition systemItemCondition = new SystemItemCondition();
-        systemItemCondition.setSystemItem(systemItem);
+        systemItemCondition.setSystemItemId(systemItem.getId());
         systemItemCondition.setUpdateDate(systemItem.getDate());
         systemItemCondition.setUrl(systemItem.getUrl());
         systemItemCondition.setSize(systemItem.getSize());

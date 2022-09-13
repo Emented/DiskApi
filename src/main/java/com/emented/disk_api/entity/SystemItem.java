@@ -1,8 +1,11 @@
 package com.emented.disk_api.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -34,6 +37,7 @@ public class SystemItem {
     private Set<SystemItem> children = null;
 
     @OneToMany(mappedBy = "systemItem", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<SystemItemCondition> conditions;
 
     public SystemItem() {
@@ -112,6 +116,19 @@ public class SystemItem {
 
     public void setConditions(List<SystemItemCondition> conditions) {
         this.conditions = conditions;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SystemItem)) return false;
+        SystemItem that = (SystemItem) o;
+        return id.equals(that.id) && Objects.equals(url, that.url) && date.equals(that.date) && Objects.equals(parentId, that.parentId) && type == that.type && Objects.equals(size, that.size);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, url, date, parentId, type, size);
     }
 
     @Override

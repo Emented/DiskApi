@@ -41,7 +41,6 @@ public class SystemItemConditionServiceImpl implements SystemItemConditionServic
         if (systemItemOptional.isEmpty()) {
             throw new SystemItemNotFoundException(ValidationErrorsEnum.ITEM_NOT_FOUND.getMessage());
         }
-        SystemItem systemItem = systemItemOptional.get();
         List<SystemItemHistoryUnit> systemItemConditions = systemItemConditionRepository
                 .findAllBySystemItemIdAndUpdateDateGreaterThanEqualAndUpdateDateLessThan(id ,dateStart, dateEnd)
                 .stream().map(systemItemConverter::convertSystemItemConditionToHistoryUnit).toList();

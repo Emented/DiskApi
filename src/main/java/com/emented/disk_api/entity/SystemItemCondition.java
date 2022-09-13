@@ -1,6 +1,8 @@
 package com.emented.disk_api.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.Instant;
 
@@ -9,14 +11,14 @@ import java.time.Instant;
 public class SystemItemCondition {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "system_item_id", insertable = false, updatable = false)
+    @Column(name = "system_item_id")
     private String systemItemId;
 
     @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    @JoinColumn(name = "system_item_id")
+    @JoinColumn(name = "system_item_id", insertable = false, updatable = false)
     private SystemItem systemItem;
 
     @Column(name = "parent_id")
