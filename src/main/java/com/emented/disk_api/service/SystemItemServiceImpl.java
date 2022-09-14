@@ -170,7 +170,7 @@ public class SystemItemServiceImpl implements SystemItemService {
                                                    Instant date) {
         Map<String, SystemItem> updatedItems = new HashMap<>();
         for (Map.Entry<String, SystemItem> updateEntryFromDB : elementsToUpdateFromDB.entrySet()) {
-            SystemItem itemBeforeUpdate = systemItemRepository.getReferenceById(updateEntryFromDB.getKey());
+            SystemItem itemBeforeUpdate = updateEntryFromDB.getValue();
             SystemItem itemAfterUpdate = systemItemsFromRequest.get(itemBeforeUpdate.getId());
             // checking that the element has been updated
             if (!itemBeforeUpdate.equals(itemAfterUpdate)) {
