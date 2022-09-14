@@ -1,8 +1,6 @@
 package com.emented.disk_api.entity;
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import javax.persistence.*;
 import java.time.Instant;
 

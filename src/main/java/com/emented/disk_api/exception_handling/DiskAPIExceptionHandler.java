@@ -1,6 +1,7 @@
 package com.emented.disk_api.exception_handling;
 
 import com.emented.disk_api.communication.Error;
+import com.emented.disk_api.exception.InvalidTimeIntervalException;
 import com.emented.disk_api.exception.SystemItemNotFoundException;
 import com.emented.disk_api.exception.SystemItemValidationException;
 import com.emented.disk_api.validation.ValidationErrorsEnum;
@@ -10,6 +11,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -27,7 +29,8 @@ public class DiskAPIExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = {HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler(value = {HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Error> handleJsonParseException() {
         Error error = new Error(HttpStatus.BAD_REQUEST.value(), ValidationErrorsEnum.DEFAULT_MESSAGE.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
@@ -56,6 +59,24 @@ public class DiskAPIExceptionHandler {
     @ExceptionHandler(value = {ConstraintViolationException.class})
     public ResponseEntity<Error> handleConstraintValidationException(ConstraintViolationException constraintViolationException) {
         Error error = new Error(HttpStatus.BAD_REQUEST.value(), constraintViolationException.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {MissingServletRequestParameterException.class})
+    public ResponseEntity<Error> handleMissingRequestParamException(MissingServletRequestParameterException missingServletRequestParameterException) {
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), missingServletRequestParameterException.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {InvalidTimeIntervalException.class})
+    public ResponseEntity<Error> handleInvalidTimeIntervalException(InvalidTimeIntervalException invalidTimeIntervalException) {
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), invalidTimeIntervalException.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Error> handleException(Exception exception) {
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 }

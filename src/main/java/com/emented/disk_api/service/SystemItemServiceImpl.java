@@ -44,6 +44,7 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for updating and adding new SystemItems
+     *
      * @param systemItemImportRequest Request
      */
     @Override
@@ -75,7 +76,8 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for deleting SystemItems
-     * @param id Id of element
+     *
+     * @param id   Id of element
      * @param date Date of deletion
      */
     @Override
@@ -96,6 +98,7 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for getting SystemItem from DB
+     *
      * @param id Id of element
      * @return SystemItem
      */
@@ -111,6 +114,7 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for getting updates in last 24 hours
+     *
      * @param date Current date
      * @return Response with updates
      */
@@ -124,9 +128,10 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for recursively updating branches
-     * @param item The start of recursion
+     *
+     * @param item           The start of recursion
      * @param sizeDifference Difference in size
-     * @param date Date of update
+     * @param date           Date of update
      * @return Changed items
      */
     private Map<String, SystemItem> updateBranch(SystemItem item, Long sizeDifference, Instant date) {
@@ -154,14 +159,15 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for updating already existing items
+     *
      * @param elementsToUpdateFromDB Elements to update
      * @param systemItemsFromRequest Elements from request
-     * @param date Date of updating
+     * @param date                   Date of updating
      * @return Updated items
      */
     private Map<String, SystemItem> updateElements(Map<String, SystemItem> elementsToUpdateFromDB,
-                                Map<String, SystemItem> systemItemsFromRequest,
-                                Instant date) {
+                                                   Map<String, SystemItem> systemItemsFromRequest,
+                                                   Instant date) {
         Map<String, SystemItem> updatedItems = new HashMap<>();
         for (Map.Entry<String, SystemItem> updateEntryFromDB : elementsToUpdateFromDB.entrySet()) {
             SystemItem itemBeforeUpdate = updateEntryFromDB.getValue();
@@ -198,12 +204,13 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for inserting new files
+     *
      * @param systemItemsFromRequest Elements from request
      * @param elementsToUpdateFromDB Elements to update
      * @return Updated items
      */
     private Map<String, SystemItem> insertNewFiles(Map<String, SystemItem> systemItemsFromRequest,
-                                Map<String, SystemItem> elementsToUpdateFromDB) {
+                                                   Map<String, SystemItem> elementsToUpdateFromDB) {
         Map<String, SystemItem> newFiles = systemItemsFromRequest
                 .entrySet()
                 .stream()
@@ -221,12 +228,13 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     /**
      * The method responsible for inserting new folders
+     *
      * @param systemItemsFromRequest Elements from request
      * @param elementsToUpdateFromDB Elements to update
      * @return Updated items
      */
     private Map<String, SystemItem> insertNewFolders(Map<String, SystemItem> systemItemsFromRequest,
-                                  Map<String, SystemItem> elementsToUpdateFromDB) {
+                                                     Map<String, SystemItem> elementsToUpdateFromDB) {
         Map<String, SystemItem> newFolders = systemItemsFromRequest
                 .entrySet()
                 .stream()

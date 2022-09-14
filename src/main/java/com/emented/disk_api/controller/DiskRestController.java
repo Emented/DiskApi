@@ -39,7 +39,7 @@ public class DiskRestController {
 
     @DeleteMapping("/delete/{id}")
     public Response deleteSystemItem(@PathVariable @NotBlank String id,
-                                     @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") Instant date) {
+                                     @RequestParam Instant date) {
         systemItemService.deleteItemById(id, date);
         return new Response(HttpStatus.OK.value(), "Deletion was completed successfully.");
     }
@@ -56,10 +56,8 @@ public class DiskRestController {
 
     @GetMapping("/node/{id}/history")
     public SystemItemHistoryResponse getHistoryForSystemItem(@PathVariable @NotBlank String id,
-                                                             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-                                                             Instant dateStart,
-                                                             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-                                                             Instant dateEnd) {
+                                                             @RequestParam Instant dateStart,
+                                                             @RequestParam Instant dateEnd) {
         return systemItemConditionService.getHistoryForSystemItem(id, dateStart, dateEnd);
     }
 }

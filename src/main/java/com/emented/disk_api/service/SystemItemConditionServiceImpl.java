@@ -5,6 +5,7 @@ import com.emented.disk_api.communication.SystemItemHistoryUnit;
 import com.emented.disk_api.dao.SystemItemConditionRepository;
 import com.emented.disk_api.dao.SystemItemRepository;
 import com.emented.disk_api.entity.SystemItem;
+import com.emented.disk_api.exception.InvalidTimeIntervalException;
 import com.emented.disk_api.exception.SystemItemNotFoundException;
 import com.emented.disk_api.util.SystemItemConverter;
 import com.emented.disk_api.validation.ValidationErrorsEnum;
@@ -35,21 +36,25 @@ public class SystemItemConditionServiceImpl implements SystemItemConditionServic
 
     /**
      * The method responsible for getting history of item changes during some period of time
-     * @param id Item's id
+     *
+     * @param id        Item's id
      * @param dateStart Start point
-     * @param dateEnd End point
+     * @param dateEnd   End point
      * @return SystemItemHistoryResponse
      */
     @Override
     public SystemItemHistoryResponse getHistoryForSystemItem(String id,
                                                              Instant dateStart,
                                                              Instant dateEnd) {
+        if (dateStart.isAfter(dateEnd)) {
+            throw new InvalidTimeIntervalException(ValidationErrorsEnum.INVALID_TIME_STAMP.getMessage());
+        }
         Optional<SystemItem> systemItemOptional = systemItemRepository.findById(id);
         if (systemItemOptional.isEmpty()) {
             throw new SystemItemNotFoundException(ValidationErrorsEnum.ITEM_NOT_FOUND.getMessage());
         }
         List<SystemItemHistoryUnit> systemItemConditions = systemItemConditionRepository
-                .findAllBySystemItemIdAndUpdateDateGreaterThanEqualAndUpdateDateLessThan(id ,dateStart, dateEnd)
+                .findAllBySystemItemIdAndUpdateDateGreaterThanEqualAndUpdateDateLessThan(id, dateStart, dateEnd)
                 .stream().map(systemItemConverter::convertSystemItemConditionToHistoryUnit).toList();
 
         return new SystemItemHistoryResponse(systemItemConditions);
@@ -57,6 +62,7 @@ public class SystemItemConditionServiceImpl implements SystemItemConditionServic
 
     /**
      * Method responsible for saving the condition of item
+     *
      * @param systemItem Item
      */
     @Override

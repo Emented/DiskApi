@@ -18,7 +18,7 @@ public class SystemItemImportRequest {
     private List<SystemItemImport> items;
 
     @NotNull(message = "Date must not be null")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mmX")
     private Instant updateDate;
 
     public SystemItemImportRequest(List<SystemItemImport> items, Instant updateDate) {
