@@ -59,10 +59,15 @@ Building...
 foo@bar:~$ mvn clean install
 ```
 
-Launching Docker Compose
+Building and launching Docker Compose
 
 ```console
 foo@bar:~$ docker-compose up --build
+```
+For further runs use
+
+```console
+foo@bar:~$ docker-compose up
 ```
 
 ### Run API without Docker:
