@@ -140,7 +140,7 @@ public class SystemItemServiceImpl implements SystemItemService {
         while (parentId != null) {
             SystemItem parent = systemItemRepository.getReferenceById(parentId);
             boolean isUpdated = false;
-            if (parent.getDate() != date) {
+            if (!parent.getDate().equals(date)) {
                 parent.setDate(date);
                 isUpdated = true;
             }
@@ -170,13 +170,13 @@ public class SystemItemServiceImpl implements SystemItemService {
                                                    Instant date) {
         Map<String, SystemItem> updatedItems = new HashMap<>();
         for (Map.Entry<String, SystemItem> updateEntryFromDB : elementsToUpdateFromDB.entrySet()) {
-            SystemItem itemBeforeUpdate = updateEntryFromDB.getValue();
+            SystemItem itemBeforeUpdate = systemItemRepository.getReferenceById(updateEntryFromDB.getKey());
             SystemItem itemAfterUpdate = systemItemsFromRequest.get(itemBeforeUpdate.getId());
             // checking that the element has been updated
             if (!itemBeforeUpdate.equals(itemAfterUpdate)) {
                 updatedItems.put(itemAfterUpdate.getId(), itemAfterUpdate);
                 // update the size if the item is a file
-                if (itemAfterUpdate.getType() == SystemItemType.FOLDER) {
+                if (itemAfterUpdate.getType().equals(SystemItemType.FOLDER)) {
                     itemAfterUpdate.setSize(itemBeforeUpdate.getSize());
                 }
                 // checking whether the parent has changed, and if it has changed, then we bypass two branches
@@ -214,7 +214,7 @@ public class SystemItemServiceImpl implements SystemItemService {
         Map<String, SystemItem> newFiles = systemItemsFromRequest
                 .entrySet()
                 .stream()
-                .filter(entry -> entry.getValue().getType() == SystemItemType.FILE &&
+                .filter(entry -> entry.getValue().getType().equals(SystemItemType.FILE) &&
                         !elementsToUpdateFromDB.containsKey(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         Map<String, SystemItem> updatedItems = new HashMap<>(newFiles);
@@ -238,7 +238,7 @@ public class SystemItemServiceImpl implements SystemItemService {
         Map<String, SystemItem> newFolders = systemItemsFromRequest
                 .entrySet()
                 .stream()
-                .filter(entry -> entry.getValue().getType() == SystemItemType.FOLDER &&
+                .filter(entry -> entry.getValue().getType().equals(SystemItemType.FOLDER) &&
                         !elementsToUpdateFromDB.containsKey(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         systemItemRepository.saveAll(newFolders.values());
@@ -252,7 +252,7 @@ public class SystemItemServiceImpl implements SystemItemService {
                     break;
                 }
                 SystemItem parent = systemItemRepository.getReferenceById(parentId);
-                if (parent.getDate() != folder.getDate()) {
+                if (!parent.getDate().equals(folder.getDate())) {
                     parent.setDate(folder.getDate());
                     updatedIDs.add(folder.getId());
                     updatedItems.put(parent.getId(), parent);
